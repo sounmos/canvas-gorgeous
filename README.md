@@ -1,2 +1,1 @@
-# ui-view
-chrome view element hierarchy，graphical
+# canvas particle effect
