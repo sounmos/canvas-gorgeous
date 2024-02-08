@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    canvas {
+      background: black
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+  const width = window.innerWidth
+  const height = window.innerHeight
+
+  const ctx = document.getElementById('canvas');
+
+  ctx.width = window.innerWidth
+  ctx.height = window.innerHeight
+
+  const c = ctx.getContext('2d');
+  const arr = [];
+  const count = 200;
+
+  let mouse = {};
+
+  document.onmousemove = function (evt) {
+    let e = evt || window.event;
+    mouse = {
+      x: e.clientX,
+      y: e.clientY
+    };
+  };
+  document.onmouseleave = function () {
+    mouse = undefined;
+  };
+
+  function start() {
+    let p = null;
+    c.clearRect(0, 0, ctx.width, ctx.height);
+    for (let i = 0; i < count; i++) {
+      if (arr.length !== count) {
+        p = {
+          x: Math.floor(Math.random() * width),
+          y: Math.floor(Math.random() * height),
+          vx: 1 - Math.random() * 2,
+          vy: 1 - Math.random() * 2,
+          num: 0
+        };
+      } else {
+        p = draw(arr[i]);
+      }
+      c.fillStyle = '#ece6e6';
+      c.fillRect(p.x, p.y, 2, 2);
+      arr[i] = p;
+    }
+    check();
+
+    requestAnimationFrame(start)
+  }
+
+  start()
+
+  function draw(p) {
+    let a = p;
+    // 左右边界检测
+    if (p.x <= 0 || p.x >= ctx.width) {
+      p.vx = -p.vx;
+      p.x += p.vx;
+
+      return p
+      // 上下边界检测
+    } else if (p.y <= 0 || p.y >= ctx.height) {
+      p.vy = -p.vy;
+      p.y += p.vy;
+
+      return p
+    } else {
+      a = {
+        x: a.x + a.vx,
+        y: a.y + a.vy,
+        vx: a.vx,
+        vy: a.vy,
+        num: 0
+      };
+    }
+    return a;
+  }
+
+  function check() {
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = 0; j < arr.length; j++) {
+        if (i !== j) {
+          const len = getDistance(arr[i], arr[j])
+
+          if (len <= 5000 && arr[i].num < 6) {
+            arr[i].num++;
+            c.lineWidth = 0.5 - len / 4000;
+            c.beginPath();
+            c.strokeStyle = '#efe8e8';
+            c.moveTo(arr[i].x + 2, arr[i].y + 2);
+            c.lineTo(arr[j].x, arr[j].y);
+            c.stroke();
+          }
+        }
+      }
+      if (mouse) {
+        const distance = getDistance(arr[i], mouse)
+
+        if (distance <= 20000) {
+          if (distance > 5000) {
+            arr[i].x = arr[i].x + (mouse.x - arr[i].x) / 20;
+            arr[i].y = arr[i].y + (mouse.y - arr[i].y) / 20;
+          }
+          c.lineWidth = 1;
+          c.strokeStyle = '#a1a0a0';
+          c.beginPath();
+          c.moveTo(arr[i].x, arr[i].y);
+          c.lineTo(mouse.x, mouse.y);
+          c.stroke();
+        }
+      }
+    }
+  }
+
+  function getDistance(p1, p2) {
+    return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
+  }
+</script>
+</body>
+</html>

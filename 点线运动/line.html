@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    html, body{
+      background: black;
+    }
+
+    #canvas{
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="800"></canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const c = ctx.getContext('2d')
+
+  const segment = 20
+  const range = 1.2
+  const width = ctx.width / 1.2;
+  const height = ctx.height / 4;
+
+  const pointColor = 'orange'
+  const lineColor = '#85F110FF'
+
+  let timer = null;
+
+  let start = 50;
+
+  let speed = 1;
+
+  const points = []
+
+  for (let i = 0; i < segment; i++) {
+    points.push({
+      x: i * (width / segment) + start,
+      y: Math.random() * height + height
+    })
+  }
+
+  function drawPoint() {
+    for (let i = 0; i < points.length; i++) {
+      c.beginPath()
+      c.fillStyle = pointColor
+      c.arc(points[i].x, points[i].y, 2, 0, Math.PI * 2)
+      c.fill();
+    }
+  }
+
+  function update(start) {
+    // 设直线段起点
+    c.strokeStyle = lineColor
+    for (let i = 0; i < points.length - 1; i++) {
+      const { x, y } = points[i]
+      const { x: nx, y: ny } = points[i + 1]
+      c.moveTo(x, y)
+
+      const ratio = (start - x) / (nx - x)
+
+      if (start >= x && start < nx) {
+        c.lineTo(start, lerp(y, ny, ratio))
+      }
+
+      c.stroke()
+    }
+  }
+
+  function animation() {
+    drawPoint()
+    start += speed;
+    if (start > points[points.length - 1].x) {
+      cancelAnimationFrame(timer)
+      return;
+    }
+
+    update(start)
+
+    timer = requestAnimationFrame(animation)
+  }
+
+  animation()
+
+  // 平滑运动函数
+  function lerp(x, y, t) {
+    return x * (1 - t) + y * t
+  }
+
+</script>

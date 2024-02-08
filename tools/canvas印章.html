@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+  <title>canvas印章</title>
+</head>
+<body>
+<div>
+  <canvas id="canvas" width="400" height="400"></canvas>
+  <img id="img" src="" alt="">
+</div>
+<script>
+  // canvas绘制图像的原点是canvas画布的左上角
+  const ctx = document.getElementById('canvas');
+  const c = ctx.getContext('2d');
+
+  const width = ctx.width / 2;
+  const height = ctx.height / 2;
+
+  // 印章和字体的颜色
+  const color = '#cc0000';
+
+  // 绘制印章
+  draw();
+
+  // 转换为图片
+  turnImage();
+
+  // 绘制边框
+  function drawBorder() {
+    c.lineWidth = 5;
+    c.strokeStyle = color;
+    c.beginPath();
+    c.arc(width, height, 90, 0, Math.PI * 2);//宽、高、半径
+    c.stroke();
+  }
+
+  // 添加印章名称 / 描述
+  function drawText(text = '啥啥啥') {
+    c.font = '16px 宋体';
+    c.textBaseline = 'middle';//设置文本的垂直对齐方式
+    c.textAlign = 'center'; //设置文本的水平对对齐方式
+    c.lineWidth = 1;
+    c.fillStyle = color;
+    c.save();
+
+    // 将原点移动到画布中心
+    c.translate(width, height);
+    c.scale(1, 2);//伸缩要先把远点平移到要写字的位置，然后在绘制文字
+    c.fillText(text, 0, 28);//原点已经移动
+    c.restore();
+  }
+
+  // 画五角星
+  function companyName() {
+    const companyName = '哈哈哈哈哈哈哈哈哈有限公司';
+
+    c.translate(width, height);// 平移到此位置,
+    c.font = '18px 宋体';
+    const count = companyName.length;// 字数
+
+    const angle = 4 * Math.PI / (3 * (count - 1));// 字间角度
+
+    for (let i = 0; i < count; i++) {
+      // 绕 canvas 的画布圆心旋转
+      if (i === 0) {
+        c.rotate(5 * Math.PI / 6);
+      } else {
+        c.rotate(angle);
+      }
+      c.save();
+      c.translate(66, 0);
+      c.rotate(Math.PI / 2);// 旋转90度,让字平行于x轴
+      c.scale(1, 2);//伸缩画布，实现文字的拉长
+      c.fillText(companyName[i], 0, 0);// 此点为字的中心点
+      c.restore();
+    }
+
+    c.rotate(-Math.PI / 6);
+    // 将原点平移回左上角位置
+    c.translate(-width, -height);
+  }
+
+  function drawStar() {
+    // 五角星半径
+    const radius = 25;
+
+    c.save();
+    c.fillStyle = color;
+    c.translate(width, height);
+    c.rotate(Math.PI);
+    c.beginPath();
+    const dig = Math.PI / 5 * 4;
+
+    // 画五条边
+    for (let i = 0; i < 5; i++) {
+      let x = Math.sin(i * dig);
+      let y = Math.cos(i * dig);
+      c.lineTo(x * radius, y * radius);
+    }
+
+    c.closePath();
+    c.stroke();
+    c.fill();
+    c.restore();
+  }
+
+  // 绘制圆形印章
+  function draw() {
+    // 绘制印章边框
+    drawBorder();
+
+    // 画五角星
+    drawStar();
+
+    // 绘制印章名称
+    drawText();
+
+    // 绘制印章单位
+    companyName();
+  }
+
+  function turnImage() {
+    document.getElementById('img').src = ctx.toDataURL('image/png', 1);
+  }
+</script>
+</body>
+</html>

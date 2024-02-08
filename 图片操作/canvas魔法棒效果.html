@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Magic Wand Selection</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+<canvas id="myCanvas" width="400" height="300"></canvas>
+<br>
+<button onclick="startSelection()">Start Selection</button>
+
+<script>
+  const canvas = document.getElementById("myCanvas");
+  const ctx = canvas.getContext("2d");
+
+  let imageData;
+  let visitedPixels;
+  let isSelecting = false;
+
+  const image = new Image()
+  image.onload = function() {
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+  }
+  image.src = '../assets/people.jpg'
+
+  canvas.addEventListener('mousedown', function(event) {
+    if (isSelecting) {
+      let mouseX = event.offsetX;
+      let mouseY = event.offsetY;
+
+      imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      visitedPixels = new Array(imageData.data.length / 4).fill(false);
+
+      let startPixelIndex = (mouseY * canvas.width + mouseX) * 4;
+
+      let startColor = getColorAtPixel(startPixelIndex);
+
+      floodFill(mouseX, mouseY, startColor);
+    }
+  });
+
+  function startSelection() {
+    isSelecting = true;
+  }
+
+  function getColorAtPixel(pixelIndex) {
+    let r = imageData.data[pixelIndex];
+    let g = imageData.data[pixelIndex + 1];
+    let b = imageData.data[pixelIndex + 2];
+    let a = imageData.data[pixelIndex + 3];
+
+    return { r: r, g: g, b: b, a: a };
+  }
+
+  function setColorAtPixel(pixelIndex, color) {
+    imageData.data[pixelIndex] = color.r;
+    imageData.data[pixelIndex + 1] = color.g;
+    imageData.data[pixelIndex + 2] = color.b;
+    imageData.data[pixelIndex + 3] = color.a;
+  }
+
+  function floodFill(x, y, startColor) {
+    let stack = [];
+    stack.push({ x: x, y: y });
+
+    while (stack.length > 0) {
+      let currentPixel = stack.pop();
+      let pixelIndex = (currentPixel.y * canvas.width + currentPixel.x) * 4;
+
+      if (currentPixel.x >= 0 && currentPixel.x < canvas.width && currentPixel.y >= 0 && currentPixel.y < canvas.height &&
+        !visitedPixels[pixelIndex / 4] && isSimilarColor(getColorAtPixel(pixelIndex), startColor)) {
+        setColorAtPixel(pixelIndex, { r: 0, g: 0, b: 0, a: 0 });
+        visitedPixels[pixelIndex / 4] = true;
+
+        stack.push({ x: currentPixel.x + 1, y: currentPixel.y });
+        stack.push({ x: currentPixel.x - 1, y: currentPixel.y });
+        stack.push({ x: currentPixel.x, y: currentPixel.y + 1 });
+        stack.push({ x: currentPixel.x, y: currentPixel.y - 1 });
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  function isSimilarColor(color1, color2) {
+    const threshold = 30; // 颜色相似性阈值
+
+    return Math.abs(color1.r - color2.r) <= threshold &&
+      Math.abs(color1.g - color2.g) <= threshold &&
+      Math.abs(color1.b - color2.b) <= threshold &&
+      Math.abs(color1.a - color2.a) <= threshold;
+  }
+</script>
+</body>
+</html>

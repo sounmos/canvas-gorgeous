@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #box {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+<div id="box">
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+  //获取画布元素
+  const ctx = document.getElementById('canvas');
+  ctx.width = window.innerWidth;
+  ctx.height = window.innerHeight;
+
+  const c = ctx.getContext('2d');
+
+  draw('1234567890');
+
+  function draw(text) {
+    const textHeight = 180;
+
+    c.font = textHeight + 'px 宋体';
+    c.fillStyle = '#ffffff';
+
+    const textWidth = c.measureText(text).width
+    const startY = (ctx.height - textHeight) / 2
+
+    c.fillText(text, 0, (ctx.height - textHeight) / 2);
+
+    const oImg = c.getImageData(0, 0, ctx.width, ctx.height);
+
+    let x = 0
+
+    function animation() {
+      c.clearRect(x, 0, ctx.width, ctx.height);
+      for (let y = startY - textHeight; y < startY + 50; y++) {
+        if (getAlpha(oImg, x, y) !== 0) {
+          c.beginPath()
+          c.strokeStyle = 'red'
+          c.moveTo(x, y)
+          c.lineTo(ctx.width, y)
+          c.stroke()
+        }
+      }
+      x++
+      if (x > textWidth) {
+        return;
+      }
+      requestAnimationFrame(animation);
+    }
+
+    animation();
+  }
+
+  function getAlpha(img, x, y) {
+    return img.data[(y * img.width + x) * 4 + 3];
+  }
+</script>
+</body>
+</html>

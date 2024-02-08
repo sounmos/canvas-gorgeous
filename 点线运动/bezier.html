@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    html, body{
+      background: black;
+    }
+
+    #canvas{
+      background: white;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="800" height="800"></canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const c = ctx.getContext('2d')
+
+  const segment = 20
+  const width = ctx.width / 1.2;
+  const height = ctx.height / 4;
+
+  const pointColor = 'orange'
+  const lineColor = '#85F110FF'
+
+  let timer = null;
+
+  let start = 50;
+
+  let speed = 1;
+
+  const points = new Array(segment).fill().map((item, i) => ({
+    x: i * (width / segment) + start,
+    y: Math.random() * height + height
+  }))
+
+  function drawPoint() {
+    for (let i = 0; i < points.length; i++) {
+      c.beginPath()
+      c.fillStyle = pointColor
+      c.arc(points[i].x, points[i].y, 2, 0, Math.PI * 2)
+      c.fill();
+    }
+  }
+
+  function update(start) {
+    c.beginPath()
+    c.moveTo(points[0].x, points[0].y)
+    c.strokeStyle = lineColor
+
+    // 绘制曲线
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] ? points[i - 1] : points[0]
+      const p1 = points[i]
+      const p2 = points[i + 1]
+      const p3 = points[i + 2] ? points[i + 2] : points[points.length - 1]
+
+      const cp1x = p1.x + (p2.x - p0.x) / 5
+      const cp1y = p1.y + (p2.y - p0.y) / 5
+      const cp2x = p2.x - (p3.x - p1.x) / 5
+      const cp2y = p2.y - (p3.y - p1.y) / 5
+
+      c.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y)
+    }
+
+    c.stroke()
+
+    c.clearRect(start, 0, ctx.width, ctx.height);
+  }
+
+  function animation() {
+    start += speed;
+    if (start > points[points.length - 1].x) {
+      cancelAnimationFrame(timer)
+      return;
+    }
+
+    update(start)
+    drawPoint()
+
+    timer = requestAnimationFrame(animation)
+  }
+
+  animation()
+</script>

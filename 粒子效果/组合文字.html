@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #box {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+<div id="box">
+  <canvas id="canvas"></canvas>
+</div>
+<script>
+  //获取画布元素
+  const ctx = document.getElementById('canvas');
+  ctx.width = window.innerWidth;
+  ctx.height = window.innerHeight;
+
+  //设置画布环境
+  const c = ctx.getContext('2d');
+
+  draw('test');
+
+  function draw(text) {
+    c.clearRect(0, 0, ctx.width, ctx.height);
+    //随机颜色
+    const textHeight = 180;
+
+    c.font = textHeight + 'px 宋体';
+    c.fillStyle = '#ffffff';
+
+    c.fillText(text, (ctx.width - c.measureText(text).width) / 2, (ctx.height - textHeight) / 2);
+    //查找画布上的所有文字位置
+    const oImg = c.getImageData(0, 0, ctx.width, ctx.height);
+
+    const num = 4;
+
+    const w = oImg.width / num;
+    const h = oImg.height / num;
+    let arr = [];
+    for (let i = 0; i < h; i++) {
+      for (let j = 0; j < w; j++) {
+        if (getAlpha(oImg, j * num, i * num) !== 0) {
+          arr.push({
+            x: j * num,
+            y: i * num,
+            rx: Math.floor(Math.random() * ctx.width),
+            ry: Math.floor(Math.random() * ctx.height)
+          });
+        }
+      }
+    }
+
+    const d = 500;
+    let start = Date.now();
+
+    function animation() {
+      c.clearRect(0, 0, ctx.width, ctx.height);
+
+      let t = Math.min(Date.now() - start, d);
+
+      for (let i = 0; i < arr.length; i++) {
+        const { x, y } = getNextPosition(arr[i], t, d);
+        c.beginPath();
+        c.arc(x, y, 2, 0, Math.PI * 2);
+        c.fill();
+      }
+
+      if (t === d) {
+        start = Date.now();
+        return;
+      }
+
+      requestAnimationFrame(animation);
+    }
+
+    animation();
+  }
+
+  function getNextPosition(p, t, d) {
+    return {
+      x: (p.x - p.rx) * t / d + p.rx,
+      y: (p.y - p.ry) * t / d + p.ry
+    };
+  }
+
+  function getAlpha(img, x, y) {
+    return img.data[(y * img.width + x) * 4 + 3];
+  }
+</script>
+</body>
+</html>
