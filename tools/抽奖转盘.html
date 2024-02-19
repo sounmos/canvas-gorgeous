@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+  <title>canvas 抽奖盘</title>
+  <style>
+    canvas{
+      border: 1px solid gray;
+    }
+  </style>
+</head>
+<body>
+<div>
+  <canvas id="canvas" width="400" height="400"></canvas>
+
+  <button id="btn">开始</button>
+</div>
+<script>
+  // canvas绘制图像的原点是canvas画布的左上角
+  const ctx = document.getElementById('canvas');
+  const c = ctx.getContext('2d');
+
+  const w = ctx.width / 2
+  const h = ctx.height / 2
+
+  const list = [
+    '壹壹壹壹',
+    '贰贰贰贰',
+    '叁叁叁叁',
+    '肆肆肆肆',
+    '伍伍伍伍',
+  ]
+
+  let speed = 1 / 20; // 抽奖旋转速度
+
+  const minSpeed = 1 / 1000; // 转盘终止条件
+
+  const count = list.length; // 奖品个数
+
+  const angle = Math.PI * 2 / count;// 字间角度
+
+  const fontSize = 18;
+
+  const size = list[0].length * 18 + 40;
+
+  c.fillStyle = 'red';
+  c.strokeStyle = 'red';
+
+  c.translate(w, h);// 平移到奖盘中心位置,
+  c.font = `${fontSize}px 宋体`;
+
+  // 绘制中心点
+  function drawCenter() {
+    c.beginPath();
+    c.arc(0, 0, 10, 0, Math.PI * 2);
+    c.fill();
+
+  }
+
+  function drawPrize() {
+    for (let i = 0; i < count; i++) {
+      const item = list[i]
+      c.rotate(angle);
+
+      c.save();
+      c.translate(size, 0); // 将字向远离圆心的位置移动
+      c.rotate(Math.PI / 2);// 旋转90度,让字指向圆心
+      for (let j = 0; j < item.length; j++) {
+        c.fillText(item[j], -8, j * fontSize * 1.2);
+      }
+
+      c.restore();
+
+      drawSector()
+    }
+    // 不需要将原点平移回左上角位置，因为之后的抽奖旋转还需要使用，只是需要特殊处理下 clearRect 的参数
+  }
+
+  // 绘制分区
+  function drawSector() {
+    c.save()
+    if (list.length % 2 !== 0) {
+      c.rotate(Math.PI / 2);
+    } else {
+      const base = (list.length / 2) % 2 === 0 ? 2 : 1
+      c.rotate(angle / base)
+    }
+    c.beginPath()
+    c.moveTo(0, 0)
+    c.lineTo(0, size * 1.5)
+    c.stroke()
+
+    c.beginPath()
+    c.arc(0, 0, size * 1.5, 0, angle);
+    c.stroke()
+    c.restore()
+  }
+
+  function init() {
+    drawPrize()
+
+    drawCenter()
+  }
+
+  init()
+
+  let timer = 0
+
+  let endTime = 300
+
+  function animation() {
+    timer++;
+
+    c.clearRect(-w, -h, w * 2, h * 2)
+
+    if (timer > endTime) {
+      speed *= 0.99
+    }
+
+    c.rotate(speed)
+
+    init()
+
+    if (speed < minSpeed) {
+      return;
+    }
+
+    requestAnimationFrame(animation)
+  }
+
+  document.getElementById('btn').onclick = function (){
+    endTime = Math.floor(Math.random() * 400) + 100
+    animation()
+  }
+</script>
+</body>
+</html>
