@@ -8,142 +8,31 @@
 <canvas width="400" height="400" id="canvas"></canvas>
 </body>
 </html>
+<script src="bezier.js"></script>
 <script>
   const ctx = document.getElementById('canvas')
   const c = ctx.getContext('2d')
 
-  // 利用二元一次方程式求解 y = ax
-  // 起点 start: 200 = 20 * x
-  // 控制点 ctl: 20 = 100 * x
-  const start = [20, 200]
-  const end = [200, 200]
-  const ctl = [100, 20]
+  const points = [
+    {
+      x: 20,
+      y: 200,
+      color: 'blue',
+    },
+    {
+      x: 100,
+      y: 20,
+      color: 'red',
+    },
+    {
+      x: 200,
+      y: 200,
+      color: 'blue',
+    },
+  ]
 
-  // 求出起始点的变化函数
-  const speedS = getRate(start, ctl)
+  const bezier = new ArbitraryBezier(ctx, points)
 
-  function draw(fList) {
-    fList.forEach(item => {
-      c.beginPath()
-      c.fillStyle = 'orange'
-      c.arc(item[0], item[1], 1, 0, Math.PI * 2)
-      c.fill()
-    })
-
-    // 起点和终点
-    c.fillStyle = 'blue';
-    c.beginPath();
-    c.arc(start[0], start[1], 5, 0, 2 * Math.PI);   // Start point
-    c.arc(end[0], end[1], 5, 0, 2 * Math.PI);  // End point
-    c.fill();
-
-    // 控制点
-    c.fillStyle = 'red';
-    c.beginPath();
-    c.arc(ctl[0], ctl[1], 5, 0, 2 * Math.PI);
-    c.fill();
-
-    c.beginPath();
-    c.strokeStyle = 'red';
-    c.setLineDash([2, 2])
-    c.moveTo(ctl[0], ctl[1])
-    c.lineTo(start[0], start[1])
-    c.stroke()
-
-    c.beginPath();
-    c.strokeStyle = 'red';
-    c.setLineDash([2, 2])
-    c.moveTo(ctl[0], ctl[1])
-    c.lineTo(end[0], end[1])
-    c.stroke()
-  }
-
-  const slong = getDis(start, ctl)
-
-  let speed = 0.5;
-
-  let subStart = [...start]
-
-  const fList = []
-
-  function sport() {
-    c.clearRect(0, 0, ctx.width, ctx.height);
-    subStart[0] = subStart[0] + speed
-    subStart[1] = subStart[1] + speed * speedS
-
-    // 起始点到控制点的运行比例
-    const process = getDis(start, subStart)
-    const ratio = process / slong
-    // 运动的终止点位置
-    const subEnd = getPoint(ctl, end, ratio)
-
-    // 计算 F 点，并连线
-    const F = getPoint(subStart, subEnd, ratio)
-
-    fList.push(F)
-
-    draw(fList)
-
-    // F点的变化轨迹
-    c.beginPath()
-    c.fillStyle = 'orange'
-    c.arc(F[0], F[1], 3, 0, Math.PI * 2)
-    c.fill()
-
-
-    // 起点变化轨迹
-    c.beginPath()
-    c.fillStyle = 'green'
-    c.arc(subStart[0], subStart[1], 3, 0, Math.PI * 2)
-    c.fill()
-
-    // 终点变化轨迹
-    c.beginPath()
-    c.fillStyle = 'green'
-    c.arc(subEnd[0], subEnd[1], 3, 0, Math.PI * 2)
-    c.fill()
-
-    // 变化辅助线
-    c.beginPath();
-    c.strokeStyle = 'green'
-    c.moveTo(subStart[0], subStart[1])
-    c.lineTo(subEnd[0], subEnd[1])
-    c.stroke()
-
-    if (subStart[0] >= ctl[0]) {
-      subStart = [...start]
-      // c.beginPath();
-      // c.setLineDash([])
-      // c.strokeStyle = 'red';
-      // c.moveTo(start[0], start[1]);
-      // c.quadraticCurveTo(ctl[0], ctl[1], end[0], end[1]);
-      // c.stroke();
-
-      return;
-    }
-    requestAnimationFrame(sport)
-  }
-
-  sport()
-
-  // 获取运动中点的位置
-  function getPoint(one, two, ratio) {
-    return [
-      (two[0] - one[0]) * ratio + one[0],
-      (two[1] - one[1]) * ratio + one[1]
-    ]
-  }
-
-  // 获取距离
-  function getDis(p1, p2) {
-    const x = p2[0] - p1[0]
-    const y = p2[1] - p1[1]
-    return Math.sqrt(x * x + y * y)
-  }
-
-  // 变化方程 （一元一次）
-  function getRate(a, b) {
-    return (b[1] - a[1]) / (b[0] - a[0]);
-  }
+  bezier.sport()
 </script>
 

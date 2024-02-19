@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<canvas width="400" height="400" id="canvas"></canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const c = ctx.getContext('2d')
+
+  function toRadian(angle) {
+    return angle / 180 * Math.PI
+  }
+
+  const R = 100;
+  const origin = [200, 200]
+  const list = []
+  const originSpeed = 1;
+  const originAngle = 18; // 点之间的偏移量
+  const disAngle = 144 // 两个角之间的角度
+  const epsilon = Number.EPSILON * 1000
+
+  for(let i = -1; i < 4; i++){
+    const x = Math.floor(Math.cos(toRadian(originAngle - i * disAngle)) * R + origin[0])
+    const y = Math.floor(-Math.sin(toRadian(originAngle - i * disAngle)) * R + origin[1])
+    list.push({
+      x, y
+    })
+  }
+
+  const speed = [];
+  const ratio = []
+  for (let i = 0; i < 5; i++) {
+    const next = list[i + 1] ?  list[i + 1] : list[0]
+
+    // x 轴移动的方向和速度，1 为正方向 -1 为反方向。
+    // y 轴的移动方向和步骤通过 ratio 得到的方程式来计算。
+    speed.push(next.x - list[i].x > 0 ? originSpeed : -originSpeed)
+
+    ratio.push(getDis(list[i], next))
+  }
+
+  const subList = JSON.parse(JSON.stringify(list))
+  let index = 0;
+  function start() {
+    if (index >= list.length) {
+      return;
+    }
+
+    c.clearRect(0, 0, ctx.width, ctx.height)
+    subList[index].x = subList[index].x + speed[index]
+    subList[index].y = subList[index].y + speed[index] * ratio[index]
+
+    c.beginPath();
+    c.strokeStyle = 'red'
+    c.lineTo(list[0].x, list[0].y)
+    subList.forEach((item, i) => {
+      const next = list[index + 1] ?  list[index + 1] : list[0]
+      // 已经绘制过的路径，直接连接即可
+      if (i < index) {
+        c.lineTo(item.x, item.y)
+      }
+      // 当前正在绘制的路径
+      if (i === index) {
+        c.lineTo(item.x, item.y)
+
+        // 判断当前线段是否绘制到了终点
+        if (Math.abs(item.x / next.x - 1) < epsilon && Math.abs(item.y / next.y - 1) < epsilon) {
+          index++
+        }
+      }
+    })
+    c.stroke()
+
+    requestAnimationFrame(start)
+  }
+
+  start()
+  function getDis(d1, d2) {
+    return (d2.y - d1.y) / (d2.x - d1.x)
+  }
+</script>

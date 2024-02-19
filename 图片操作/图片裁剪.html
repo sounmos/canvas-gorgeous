@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>canvas 图片裁剪</title>
+  <style>
+    #canvas {
+      border: 1px solid #000;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="600" height="500"></canvas>
+<script>
+  const ctx = document.getElementById('canvas');
+  const c = ctx.getContext('2d');
+
+  const image = new Image()
+  image.onload = function() {
+    c.drawImage(image, 0, 0, ctx.width, ctx.height)
+  }
+  image.src = '../assets/cherry.jpg'
+
+  class ImgCrop{
+    start = {}; // 记录鼠标开始位置。
+    cropData = {}; // 框选信息
+    ctx = null
+
+    constructor(canvas) {
+      if (!canvas) {
+        throw new Error('canvas must be required!')
+      }
+      this.ctx = canvas;
+      this.c = this.ctx.getContext('2d')
+
+      this.init()
+    }
+
+    init() {
+      this.ctx.onmousedown = (e) => this.handleMouseDown(e)
+    }
+    handleMouseDown(e) {
+      console.log(this.start);
+      this.start.x = e.offsetX
+      this.start.y = e.offsetY
+
+      this.ctx.onmousemove = (e) => this.handleMouseMove(e)
+      document.onmouseup = (e) => this.handleMouseUp(e)
+    }
+    handleMouseMove(e) {
+      // 保存裁剪区域的相关信息。
+      this.cropData.width = e.offsetX - this.start.x
+      this.cropData.height = e.offsetY - this.start.y
+
+      c.clearRect(0, 0, this.ctx.width, this.ctx.height);
+      // 绘制蒙层。
+      this.drawImageMasker();
+      // 绘制选框
+      this.drawScreenShot();
+    }
+    drawImageMasker() {
+      this.c.fillStyle = `rgba(0, 0, 0, 0.4)`;
+      this.c.fillRect(0, 0, this.ctx.width, this.ctx.height);
+    }
+    drawScreenShot() {
+      // 首先绘制蒙层和选框，然后将选框的内容剔除掉
+      this.c.globalCompositeOperation = 'destination-out';
+      this.c.fillStyle = '#2c2c2c';
+      this.c.fillRect(this.start.x, this.start.y, this.cropData.width, this.cropData.height);
+
+      // 在蒙层后面绘制图片
+      this.c.globalCompositeOperation = 'destination-over';
+      this.c.drawImage(image, 0, 0, this.ctx.width, this.ctx.height);
+    }
+    handleMouseUp() {
+      this.ctx.onmousemove = null
+      document.onmouseup = null
+
+      this.cropImage()
+    }
+    cropImage() {
+      const { x, y } = this.start
+      const { width, height } = this.cropData
+      const croppedImage = document.createElement('canvas');
+      const croppedCtx = croppedImage.getContext('2d');
+      croppedImage.width = width;
+      croppedImage.height = height;
+      croppedCtx.drawImage(this.ctx, x, y, width, height, 0, 0, width, height);
+      const dataURL = croppedImage.toDataURL();
+      let result = document.getElementById('img')
+
+      if (!result) {
+        result = new Image();
+        result.id = 'img'
+      }
+
+      result.src = dataURL;
+      document.body.appendChild(result);
+    }
+  }
+
+  new ImgCrop(ctx)
+</script>
+</body>
+</html>

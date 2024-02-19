@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas高斯模糊</title>
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+<div>正常图片</div>
+<canvas id="source" width="300" height="300"></canvas>
+<div>模糊图片</div>
+<canvas id="target" width="300" height="300"></canvas>
+
+<script>
+  const source = document.getElementById('source');
+  const sourceCtx = source.getContext('2d');
+  const target = document.getElementById('target');
+  const targetCtx = target.getContext('2d');
+
+  // 加载图像
+  const image = new Image();
+  image.onload = function() {
+    sourceCtx.drawImage(image, 300, 300, 300, 300, 0, 0, source.width, source.height);
+    stackBlur();
+  };
+  image.src = '../assets/cherry.jpg';
+
+  function stackBlur() {
+    const imageData = sourceCtx.getImageData(0, 0, source.width, source.height);
+    const data = imageData.data;
+    const pixels = data.length;
+
+    const radius = 9; // 模糊半径
+    const sigma = radius / 3;
+
+    const kernelSize = radius * 2 + 1;
+    const kernel = [];
+    let kernelSum = 0;
+
+    // 生成高斯核
+    for (let y = -radius; y <= radius; y++) {
+      for (let x = -radius; x <= radius; x++) {
+        let distance = x * x + y * y;
+        let weight = Math.exp(-distance / (2 * sigma * sigma));
+        kernel.push(weight);
+        kernelSum += weight;
+      }
+    }
+
+    // 归一化处理
+    for (let i = 0; i < kernel.length; i++) {
+      kernel[i] /= kernelSum;
+    }
+
+    // 高斯模糊
+    for (let i = 0; i < pixels; i += 4) {
+      let r = 0
+      let g = 0
+      let b = 0
+
+      for (let j = 0; j < kernel.length; j++) {
+        const kx = Math.floor(j % kernelSize) - radius;
+        const ky = Math.floor(j / kernelSize) - radius;
+
+        const pixelIndex = (i + (kx + ky * source.width) * 4);
+
+        r += data[pixelIndex] * kernel[j];
+        g += data[pixelIndex + 1] * kernel[j];
+        b += data[pixelIndex + 2] * kernel[j];
+      }
+
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+    }
+
+    // 模糊图像
+    targetCtx.putImageData(imageData, 0, 0);
+  }
+</script>
+</body>
+</html>

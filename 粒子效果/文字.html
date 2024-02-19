@@ -18,7 +18,6 @@
     #box {
       width: 100%;
       height: 100%;
-      background: black;
     }
   </style>
 </head>
@@ -57,7 +56,7 @@
       for (let y = startY - textHeight; y < startY + 50; y++) {
         if (getAlpha(oImg, x, y) !== 0) {
           c.beginPath()
-          c.strokeStyle = 'red'
+          c.strokeStyle = 'aqua'
           c.moveTo(x, y)
           c.lineTo(ctx.width, y)
           c.stroke()

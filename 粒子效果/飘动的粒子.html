@@ -14,10 +14,6 @@
       height: 100%;
       overflow: hidden;
     }
-
-    canvas {
-      background: black
-    }
   </style>
 </head>
 <body>
@@ -63,7 +59,7 @@
       } else {
         p = draw(arr[i]);
       }
-      c.fillStyle = '#ece6e6';
+      c.fillStyle = '#f58607';
       c.fillRect(p.x, p.y, 2, 2);
       arr[i] = p;
     }
@@ -110,7 +106,7 @@
             arr[i].num++;
             c.lineWidth = 0.5 - len / 4000;
             c.beginPath();
-            c.strokeStyle = '#efe8e8';
+            c.strokeStyle = '#8cee09';
             c.moveTo(arr[i].x + 2, arr[i].y + 2);
             c.lineTo(arr[j].x, arr[j].y);
             c.stroke();
@@ -126,7 +122,7 @@
             arr[i].y = arr[i].y + (mouse.y - arr[i].y) / 20;
           }
           c.lineWidth = 1;
-          c.strokeStyle = '#a1a0a0';
+          c.strokeStyle = '#8cee09';
           c.beginPath();
           c.moveTo(arr[i].x, arr[i].y);
           c.lineTo(mouse.x, mouse.y);
