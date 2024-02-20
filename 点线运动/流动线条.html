@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>折线运动</title>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    html,body{
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+</body>
+</html>
+<script>
+  const ctx = document.createElement('canvas')
+  ctx.width = window.innerWidth
+  ctx.height = window.innerHeight
+
+  const c = ctx.getContext('2d')
+
+  ctx.style.background = 'black'
+  document.body.appendChild(ctx)
+
+  window.onresize = function () {
+    ctx.width = window.innerWidth
+    ctx.height = window.innerHeight
+  }
+
+  class Line {
+    constructor(c) {
+      if (!c) {
+        throw new Error('context must be required')
+      }
+
+      this.c = c
+
+      this.directionData = {
+        up: 'up',
+        down: 'down',
+        left: 'left',
+        right: 'right',
+      }
+
+      this.horizontal = [this.directionData.left, this.directionData.right]
+      this.vertical = [this.directionData.up, this.directionData.down]
+
+      // 确定初始方向，初始方向为初始位置的反方向
+      this.direction = ''
+
+      // 屏幕大小
+      this.w = window.innerWidth
+      this.h = window.innerHeight
+
+      this.process = 0;
+
+      // 线条颜色
+      this.color = '#be2be7'
+
+      // 随机线条粗细
+      this.lineWidth = Math.random() * 2
+
+      // 线条链接方式
+      this.c.lineCap = 'round'
+
+      // 每次行进的距离（随机数）
+      this.distance = Math.floor(Math.random() * 200);
+
+      // 记录拐点位置
+      this.pointList = [{
+        x: 0,
+        y: 0
+      }]
+
+      // 结束运动
+      this.ending = false;
+
+      this.maxRatio = 200;
+
+      // 设置初始位置和初始运动方向
+      this.setPosition()
+
+      // 设置下一个移动的点
+      this.getNextPosition()
+
+      // 移动
+      this.update()
+    }
+
+    setPosition() {
+      if (Math.random() > 0.5) {
+        this.pointList[0].x = Math.random() * this.w
+        if (Math.random() > 0.5) {
+          // 顶部出现 不用设置 y 坐标
+          this.direction = this.directionData.down
+          return
+        }
+        // 底部出现
+        this.direction = this.directionData.up
+        this.pointList[0].y = this.h
+        return
+      }
+      this.pointList[0].y = Math.random() * this.h
+      if (Math.random() > 0.5) {
+        // 左侧出现，不用设置 x 坐标
+        this.direction = this.directionData.right
+        return
+      }
+      // 右侧出现
+      this.direction = this.directionData.left
+      this.pointList[0].x = this.w
+    }
+
+    setDirection() {
+      const random = Math.random() > 0.5;
+      // 下次方向不能是当前方向的反方向
+      if (this.vertical.includes(this.direction)) {
+        this.direction = random ? this.directionData.left : this.directionData.right
+        return;
+      }
+      this.direction = random ? this.directionData.up : this.directionData.down
+    }
+
+    getNextPosition() {
+      let { x, y } = this.pointList[this.pointList.length - 1]
+
+      // 初始位置，根据方向来设置坐标
+      switch(this.direction) {
+        case this.directionData.up:
+          // y坐标-
+          y -= this.distance
+          break;
+
+        case this.directionData.down:
+          // y坐标+
+          y += this.distance
+          break;
+
+        case this.directionData.left:
+          // x坐标-
+          x -= this.distance
+          break;
+
+        case this.directionData.right:
+          // x坐标+
+          x += this.distance
+          break;
+      }
+      this.pointList.push({ x, y })
+    }
+
+    drawLine() {
+      const { x, y } = this.pointList[0]
+      const lastIndex = this.pointList.length - 1
+      // 最后两个需要计算，之前的直接连线
+
+      this.c.beginPath()
+      this.c.moveTo(x, y)
+
+      for (let i = 0; i < lastIndex; i++) {
+        const item = this.pointList[i]
+
+        this.c.strokeStyle = this.color;
+        this.c.lineWidth = this.lineWidth
+
+        this.c.lineTo(item.x, item.y)
+
+      }
+
+      const prev = this.pointList[lastIndex]
+      const last = this.pointList[lastIndex - 1]
+
+      // 垂直方向，计算 y 坐标
+      if (this.vertical.includes(this.direction)) {
+        this.c.lineTo(prev.x, this.lerp(prev.y, last.y, this.process))
+      }
+
+      // 水平方向，计算 x 坐标
+      if (this.horizontal.includes(this.direction)) {
+        this.c.lineTo(this.lerp(prev.x, last.x, this.process), prev.y)
+      }
+
+      this.c.stroke()
+
+      // 行进之后进度 +1
+      this.process ++
+    }
+
+    lerp(prev, next, t) {
+      t = t / this.maxRatio
+      return prev * t + next * (1 - t)
+    }
+
+    check() {
+      const last = this.pointList[this.pointList.length - 1]
+      if (last.x < 0 || last.x > this.w) {
+        this.ending = true;
+      }
+      if (last.y < 0 || last.y > this.h) {
+        this.ending = true;
+      }
+    }
+
+    update() {
+      // 重新设置行进方向
+      if (this.process >= this.maxRatio && !this.ending) {
+        // 检测是否绘制出界
+        this.check()
+
+        this.setDirection() // 首先生成一个运动坐标
+        this.getNextPosition()
+        this.process = 0
+
+        // 设置下一个随机距离
+        this.distance = Math.floor(Math.random() * 200)
+      }
+
+      this.drawLine()
+
+      requestAnimationFrame(() => this.update())
+    }
+  }
+
+  for (let i = 0; i < 20; i++) {
+    new Line(c)
+  }
+</script>
