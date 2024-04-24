@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>纸片旋转圆柱</title>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    html, body{
+      background: black;
+    }
+
+    #canvas{
+      background: white;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="800" height="800"></canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const c = ctx.getContext('2d')
+
+  const originx = 300;
+  const originy = 200;
+  const height = 100;
+
+  const lr = 120
+  const sr = 30
+
+  const ellipseColor = 'green'
+  const squareColor = 'orange'
+
+  const cache = []
+
+  function drawEllipse(angle, ox, oy) {
+    const x = Math.cos(toRadian(angle)) * lr + ox
+    const y = -Math.sin(toRadian(angle)) * sr + oy
+
+    cache.push({ x, y })
+
+    c.beginPath()
+    c.fillStyle = ellipseColor
+    c.arc(x, y, 1, 0, Math.PI * 2)
+    c.fill()
+
+    return [x, y]
+  }
+
+  function drawLine(x, y, x1, y1) {
+    c.beginPath()
+    c.strokeStyle = squareColor
+    c.moveTo(x, y)
+    c.lineTo(x1,y1)
+    c.stroke()
+  }
+
+  function drawPoints() {
+    cache.forEach(item => {
+      c.beginPath()
+      c.fillStyle = ellipseColor
+      c.arc(item.x, item.y, 1, 0, Math.PI * 2)
+      c.fill()
+    })
+  }
+
+  function drawSideRight() {
+    c.beginPath()
+    c.strokeStyle = ellipseColor
+    c.moveTo(originx + lr, originy)
+    c.lineTo(originx + lr, originy + height)
+    c.stroke()
+  }
+
+
+  function drawSideLeft(x, y) {
+    c.beginPath()
+    c.strokeStyle = ellipseColor
+    c.moveTo(originx - lr, originy)
+    c.lineTo(originx - lr, originy + height)
+    c.stroke()
+  }
+
+  let angle = 0
+
+  function animation() {
+    if (angle > 360) {
+      return;
+    }
+
+    c.clearRect(0,0,ctx.width,ctx.height)
+
+    if (angle >= 0) {
+      drawSideRight()
+    }
+    if (angle >= 180) {
+      drawSideLeft()
+    }
+
+    drawPoints()
+
+    const [x1, y1] = drawEllipse(angle, originx, originy)
+    const [x2, y2] = drawEllipse(angle, originx, originy + height)
+
+    drawLine(originx, originy, x1, y1)
+    drawLine(originx, originy + height, x2, y2)
+    drawLine(x1, y1, x2, y2)
+    drawLine(originx, originy, originx, originy + height)
+
+    angle++
+
+    requestAnimationFrame(animation)
+  }
+
+  animation()
+
+  function toRadian(angle) {
+    return angle / 180 * Math.PI
+  }
+
+</script>
